@@ -38,6 +38,7 @@ $ cd build
 ### Build the project
 
 ```bash
+$ cmake ..
 $ make
 ```
 
