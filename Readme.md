@@ -1,6 +1,10 @@
 # Duplicate File Finder
 
-Duplicate File Finder is a C++17 application designed to scan specified drives and or directories and identify files with identical content. It provides real-time progress updates during both the scanning and comparison phases.
+Duplicate File Finder is a C++17 application designed to scan specified drives and/or directories and identify files with identical content. It provides real-time progress updates during both the scanning and comparison phases.
+
+It's relatively easy to do, and some paid apps want to pull you into other paid apps, etc.
+
+This is just an example of what must be done, at minimum, using high-perf modern C++ code that is as blunt and correct as possible.
 
 ## Features
 
