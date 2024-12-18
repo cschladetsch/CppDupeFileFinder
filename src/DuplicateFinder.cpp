@@ -1,21 +1,19 @@
 #include "DuplicateFinder.h"
 #include "ProgressBar.h"
+
 #include <iostream>
 #include <fstream>
-#include <iomanip>
 #include <sstream>
 #include <unordered_map>
+#include <iomanip>
+#include <filesystem>
+#include <iostream>
+#include <vector>
+#include <iostream>
+#include <filesystem>
+#include <vector>
+
 #include <openssl/evp.h> // Use EVP functions instead of deprecated MD5 functions
-
-#include "DuplicateFinder.h"
-#include <iostream>
-#include <filesystem>
-#include <vector>
-
-#include "DuplicateFinder.h"
-#include <iostream>
-#include <filesystem>
-#include <vector>
 
 std::vector<std::filesystem::path> getAllFiles(const std::string& directory) {
     std::vector<std::filesystem::path> files;
