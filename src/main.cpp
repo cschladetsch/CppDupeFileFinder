@@ -5,11 +5,12 @@
 #include "DuplicateFinder.h"
 #include "ProgressBar.h"
 
-int main() {
-    // Define the directories to scan
+int main(int argc, char **argv) {
     std::vector<std::string> directories = {"/mnt/c/", "/mnt/d/"};
+	if (argc == 3) {
+		directories = std::vector<std::string> { argv[1], argv[2] };
+	}
 
-    // Initialize progress bar for scanning
     ProgressBar scanProgress(directories.size(), "Scanning Directories");
 
     // Scan directories and collect all files

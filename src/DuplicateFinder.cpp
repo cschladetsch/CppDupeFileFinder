@@ -26,7 +26,7 @@ std::vector<std::filesystem::path> getAllFiles(const std::string& directory) {
             }
         }
     } catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << "Error accessing " << directory << ": " << e.what() << '\n';
+        //TODO LOG std::cerr << "Error accessing " << directory << ": " << e.what() << '\n';
     }
     return files;
 }
@@ -90,7 +90,7 @@ std::vector<std::vector<std::filesystem::path>> findDuplicateFiles(
             std::string fileHash = computeMD5(files[i]);
             hashToFileMap[fileHash].push_back(files[i]);
         } catch (const std::exception& e) {
-            std::cerr << "\nError processing file " << files[i] << ": " << e.what() << std::endl;
+            //TODO LOG std::cerr << "\nError processing file " << files[i] << ": " << e.what() << std::endl;
         }
         // Update comparison progress
         progressBar.update(i + 1); // Pass the current progress

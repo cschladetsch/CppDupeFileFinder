@@ -72,4 +72,3 @@ void saveCache(const FileCache& cache, const std::string& cacheFilePath) {
         }
     }
 }
-
