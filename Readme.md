@@ -1,6 +1,10 @@
 # Duplicate File Finder
 
-Duplicate File Finder is a C++17 application designed to scan specified drives and or directories and identify files with identical content. It provides real-time progress updates during both the scanning and comparison phases.
+Duplicate File Finder is a C++17 application designed to scan specified drives and/or directories and identify files with identical content. It provides real-time progress updates during both the scanning and comparison phases.
+
+It's relatively easy to do, and some paid apps want to pull you into other paid apps, etc.
+
+This is just an example of what must be done, at minimum, using high-perf modern C++ code that is as blunt and correct as possible using multi-threading.
 
 ## Features
 
@@ -24,16 +28,12 @@ $ git clone https://github.com/cschladetsch/duplicate-file-finder.git
 $ cd duplicate-file-finder
 ```
 
-### Create a build directory and navigate into it
+### Build it
 
 ```bash
-$ mkdir build
-$ cd build
-```
-
-### Build the project
-
-```bash
+$ mkdir -p build && cd build
+$ rm -rf *
+$ cmake ..
 $ make
 ```
 
@@ -41,10 +41,10 @@ $ make
 
 After building the project, you can run the Duplicate File Finder executable.
 
-Note that with large drives etc, this can take some time. Obviously, I think.
+Note that this can take some time with large drives, etc. Obviously, I think.
 
 ```bash
-./DuplicateFileFinder [directory1] [directory2] ...
+$ ./DuplicateFileFinder [directory1] [directory2] ... # given no arguments it just compares all files on C and D drives
 ```
 
 ### Example
