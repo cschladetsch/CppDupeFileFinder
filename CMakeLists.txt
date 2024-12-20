@@ -1,45 +1,73 @@
+# Set the minimum CMake version required
 cmake_minimum_required(VERSION 3.10)
 
-# Set project name and C++ standard
+# Set the project name
 project(DuplicateFileFinder)
 
+# Enable C++17 or later
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Include directories
-include_directories(${PROJECT_SOURCE_DIR}/include)
-
-# Find OpenSSL and ensure it's available
+# Find required packages (OpenSSL and Threads)
 find_package(OpenSSL REQUIRED)
+find_package(Threads REQUIRED)
 
-# Add Google Test subdirectory (make sure to download or clone googletest into external/googletest)
-enable_testing()
+# Add GoogleTest as a subdirectory
 add_subdirectory(external/googletest)
 
-# Include directories for Google Test
-include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+# Include directories for GoogleTest and the rest of the project
+include_directories(
+    ${PROJECT_SOURCE_DIR}/include
+    ${OPENSSL_INCLUDE_DIR}
+    ${PROJECT_SOURCE_DIR}/external/googletest/googletest/include  # Correct include path for GoogleTest
+)
 
-# Define source files for the main project
+# Set the source files for the project
 set(SOURCES
     src/main.cpp
-    src/FileUtils.cpp
+    src/FileUtils.cpp      # Include FileUtils.cpp
+    src/DuplicateFinder.cpp
     src/ProgressBar.cpp
+)
+
+# Create the executable from the sources
+add_executable(DuplicateFileFinder ${SOURCES})
+
+# Link the executable to the necessary libraries
+target_link_libraries(DuplicateFileFinder PRIVATE
+    OpenSSL::Crypto
+    Threads::Threads
+)
+
+# Create a library for DuplicateFileFinderLib to be reused if needed
+add_library(DuplicateFileFinderLib STATIC 
+    src/DuplicateFinder.cpp
+    src/FileUtils.cpp      # Include FileUtils.cpp in the library as well
+    src/ProgressBar.cpp
+)
+
+# Link DuplicateFileFinderLib to the executable
+target_link_libraries(DuplicateFileFinder PRIVATE DuplicateFileFinderLib)
+
+# Set up tests
+enable_testing()
+
+# Add the test executable for DuplicateFinder
+add_executable(DuplicateFinderTest
+    tests/test_DuplicateFinder.cpp
+    src/FileUtils.cpp  # Include FileUtils.cpp for the test executable
     src/DuplicateFinder.cpp
 )
 
-# Create a library for the core application logic
-add_library(DuplicateFileFinderLib ${SOURCES})
+# Link the test executable to Google Test and DuplicateFileFinderLib
+target_link_libraries(DuplicateFinderTest PRIVATE 
+    DuplicateFileFinderLib
+    gtest
+    gtest_main
+    pthread  # Google Test requires pthreads
+    OpenSSL::Crypto  # Explicitly link OpenSSL to the test executable
+)
 
-# Create the executable for the main application (links with OpenSSL and DuplicateFileFinderLib)
-add_executable(DuplicateFileFinder ${SOURCES})
-target_link_libraries(DuplicateFileFinder DuplicateFileFinderLib OpenSSL::Crypto)
-
-# Add the test executable for Google Test
-add_executable(DuplicateFinderTest tests/test_DuplicateFinder.cpp)
-
-# Link the test executable with gtest, gtest_main, and your application library
-target_link_libraries(DuplicateFinderTest gtest gtest_main DuplicateFileFinderLib OpenSSL::Crypto)
-
-# Enable testing and add the test to CTest
+# Add tests to CTest
 add_test(NAME DuplicateFinderTest COMMAND DuplicateFinderTest)
 

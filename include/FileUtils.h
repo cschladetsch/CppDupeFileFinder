@@ -1,9 +1,9 @@
-#ifndef FILE_UTILS_H
-#define FILE_UTILS_H
+#pragma once
 
 #include <string>
 #include <unordered_map>
 #include <filesystem>
+#include <vector>
 
 struct FileMetadata {
     uintmax_t fileSize;
@@ -13,9 +13,9 @@ struct FileMetadata {
 
 using FileCache = std::unordered_map<std::string, FileMetadata>;
 
-std::string computeFileHash(const std::string& filePath);
+std::vector<std::filesystem::path> getAllFiles(const std::string& directory);
+std::string computeFileHash(const std::filesystem::path& file_path);
 FileCache loadCache(const std::string& cacheFilePath);
 void saveCache(const FileCache& cache, const std::string& cacheFilePath);
 
-#endif // FILE_UTILS_H
 

@@ -3,12 +3,14 @@
 #include <string>
 #include <filesystem>
 #include "DuplicateFinder.h"
+#include "FileUtils.h"
 #include "ProgressBar.h"
 
 #include <gtest/gtest.h>
 
 int main(int argc, char **argv) {
     std::vector<std::string> directories = {"/mnt/c/", "/mnt/d/"};
+    //std::vector<std::string> directories = {"c:", "d:"};
 	if (argc == 3) {
 		directories = std::vector<std::string> { argv[1], argv[2] };
 	}

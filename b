@@ -1,11 +1,11 @@
 #!/bin/bash
 
 rm -rf build
-mkdir -p build 
-cd build 
-cmake .. 
-make 
-./DuplicateFinderTest 
-cd ..
+mkdir build
+cd build
+cmake ..
+make -j$(nproc)  # Build using all available cores for faster compilation
+#./DuplicateFileFinderTest
+./DuplicateFinderTest
 
 

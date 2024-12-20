@@ -1,15 +1,13 @@
-#ifndef DUPLICATEFILEFINDER_H
-#define DUPLICATEFILEFINDER_H
+#ifndef DUPLICATEFINDER_H
+#define DUPLICATEFINDER_H
 
 #include <vector>
 #include <filesystem>
-#include <string>
-#include "ProgressBar.h" // Include the ProgressBar header
+#include "ProgressBar.h"
 
-std::string computeMD5(const std::filesystem::path& filePath);  // Declaration
-std::vector<std::filesystem::path> getAllFiles(const std::string& directory);
+// Function declaration: Find duplicate files, print them, but don't return any value
 std::vector<std::vector<std::filesystem::path>> findDuplicateFiles(
-    const std::vector<std::filesystem::path>& files, ProgressBar& progressBar);
+    const std::vector<std::filesystem::path>& files, ProgressBar& progress);
 
-#endif // DUPLICATEFILEFINDER_H
+#endif // DUPLICATEFINDER_H
 

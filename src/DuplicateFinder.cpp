@@ -1,106 +1,49 @@
+#include "FileUtils.h"
 #include "DuplicateFinder.h"
 #include "ProgressBar.h"
-
-#include <iostream>
 #include <fstream>
-#include <sstream>
+#include <iostream>
+#include <openssl/evp.h>
 #include <unordered_map>
-#include <iomanip>
-#include <filesystem>
-#include <iostream>
 #include <vector>
-#include <iostream>
 #include <filesystem>
-#include <vector>
+#include <omp.h>
 
-#include <openssl/evp.h> // Use EVP functions instead of deprecated MD5 functions
-
-std::vector<std::filesystem::path> getAllFiles(const std::string& directory) {
-    std::vector<std::filesystem::path> files;
-    try {
-        for (const auto& entry : std::filesystem::recursive_directory_iterator(directory)) {
-            if (entry.is_regular_file()) {
-                files.push_back(entry.path());
-            }
-        }
-    } catch (const std::filesystem::filesystem_error& e) {
-        //TODO LOG std::cerr << "Error accessing " << directory << ": " << e.what() << '\n';
-    }
-    return files;
-}
-
-std::string computeMD5(const std::filesystem::path& filePath) {
-    std::ifstream file(filePath, std::ios::binary);
-    if (!file) {
-        throw std::runtime_error("Unable to open file: " + filePath.string());
-    }
-
-    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
-    if (mdctx == nullptr) {
-        throw std::runtime_error("Failed to create EVP_MD_CTX");
-    }
-
-    const EVP_MD* md = EVP_md5();
-    if (EVP_DigestInit_ex(mdctx, md, nullptr) != 1) {
-        EVP_MD_CTX_free(mdctx);
-        throw std::runtime_error("EVP_DigestInit_ex failed");
-    }
-
-    char buffer[4096];
-    while (file.read(buffer, sizeof(buffer))) {
-        if (EVP_DigestUpdate(mdctx, buffer, file.gcount()) != 1) {
-            EVP_MD_CTX_free(mdctx);
-            throw std::runtime_error("EVP_DigestUpdate failed");
-        }
-    }
-    // Process any remaining bytes
-    if (file.gcount() > 0) {
-        if (EVP_DigestUpdate(mdctx, buffer, file.gcount()) != 1) {
-            EVP_MD_CTX_free(mdctx);
-            throw std::runtime_error("EVP_DigestUpdate failed");
-        }
-    }
-
-    unsigned char result[EVP_MAX_MD_SIZE];
-    unsigned int result_len;
-    if (EVP_DigestFinal_ex(mdctx, result, &result_len) != 1) {
-        EVP_MD_CTX_free(mdctx);
-        throw std::runtime_error("EVP_DigestFinal_ex failed");
-    }
-
-    EVP_MD_CTX_free(mdctx);
-
-    // Convert the result to a hexadecimal string
-    std::ostringstream hexStream;
-    hexStream << std::hex << std::setfill('0');
-    for (unsigned int i = 0; i < result_len; ++i) {
-        hexStream << std::setw(2) << static_cast<int>(result[i]);
-    }
-    return hexStream.str();
-}
-
+// Function to find duplicate files and return them as a vector of vectors
 std::vector<std::vector<std::filesystem::path>> findDuplicateFiles(
-    const std::vector<std::filesystem::path>& files, ProgressBar& progressBar) {
-    std::unordered_map<std::string, std::vector<std::filesystem::path>> hashToFileMap;
-    size_t totalFiles = files.size();
-    for (size_t i = 0; i < totalFiles; ++i) {
-        try {
-            std::string fileHash = computeMD5(files[i]);
-            hashToFileMap[fileHash].push_back(files[i]);
-        } catch (const std::exception& e) {
-            //TODO LOG std::cerr << "\nError processing file " << files[i] << ": " << e.what() << std::endl;
+    const std::vector<std::filesystem::path>& files, ProgressBar& progress) {
+
+    std::unordered_map<std::string, std::vector<std::filesystem::path>> file_hashes;
+    size_t total_files = files.size();
+    size_t processed_files = 0;
+
+    // Use OpenMP to parallelize MD5 computation across multiple threads
+    #pragma omp parallel for
+    for (size_t i = 0; i < total_files; ++i) {
+        std::string file_hash = computeFileHash(files[i]);
+
+        // Thread-safe update of the file_hashes map
+        #pragma omp critical
+        file_hashes[file_hash].push_back(files[i]);
+
+        // Update progress
+        #pragma omp atomic
+        processed_files++;
+
+        // Update progress bar periodically or asynchronously
+        if (processed_files % 10 == 0) {
+            progress.update(processed_files / static_cast<double>(total_files));
         }
-        // Update comparison progress
-        progressBar.update(i + 1); // Pass the current progress
     }
 
-    // Collect duplicate files
+    // Collect duplicates into a vector of vectors
     std::vector<std::vector<std::filesystem::path>> duplicates;
-    for (const auto& [hash, paths] : hashToFileMap) {
-        if (paths.size() > 1) {
-            duplicates.push_back(paths);
+    for (const auto& entry : file_hashes) {
+        if (entry.second.size() > 1) {
+            duplicates.push_back(entry.second);
         }
     }
+
     return duplicates;
 }
 
