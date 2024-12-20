@@ -118,3 +118,66 @@ TEST(DuplicateFinderTest, ComputeMD5Test) {
     std::filesystem::remove(temp_file);
 }
 
+
+// Test for comparing two folders where one file is different
+TEST(DuplicateFinderTest, CompareTwoFoldersWithOneFileDifferent) {
+    std::cout << "DuplicateFinderTest CompareTwoFoldersWithOneFileDifferent\n";
+
+    // Setup: create two temporary directories
+    std::string dir1 = "dir1";
+    std::string dir2 = "dir2";
+    std::filesystem::create_directory(dir1);
+    std::filesystem::create_directory(dir2);
+
+    // Create identical files in both directories
+    std::string file1_dir1 = dir1 + "/file.txt";
+    std::string file1_dir2 = dir2 + "/file.txt";
+    std::ofstream(file1_dir1) << "Identical content";  // Same content in both directories
+    std::ofstream(file1_dir2) << "Identical content";  // Same content in both directories
+
+    // Modify one file in dir2 to make it different
+    std::string file2_dir2 = dir2 + "/file2.txt";
+    std::ofstream(file2_dir2) << "Different content";  // Different content
+
+    // Execute: Call the function to find all files in both directories
+    std::vector<std::filesystem::path> files_dir1 = getAllFiles(dir1);
+    std::vector<std::filesystem::path> files_dir2 = getAllFiles(dir2);
+
+    // Simulate the logic for detecting duplicates across two directories
+    std::unordered_map<std::string, std::vector<std::filesystem::path>> file_hashes;
+
+    // Hash files in dir1
+    for (const auto& file : files_dir1) {
+        std::string md5 = computeMD5(file);
+        file_hashes[md5].push_back(file);
+    }
+
+    // Hash files in dir2
+    for (const auto& file : files_dir2) {
+        std::string md5 = computeMD5(file);
+        file_hashes[md5].push_back(file);
+    }
+
+    // Verify: Check for duplicates across directories
+    bool duplicates_found = false;
+    for (const auto& entry : file_hashes) {
+        if (entry.second.size() > 1) {
+            duplicates_found = true;
+            std::cout << "Duplicate files found with MD5: " << entry.first << ": ";
+            for (const auto& file : entry.second) {
+                std::cout << file.filename() << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
+
+    // Ensure that the files are not falsely identified as duplicates when one file is different
+    ASSERT_TRUE(duplicates_found);  // At least one duplicate file should be found
+    EXPECT_EQ(file_hashes.size(), 2);  // Two unique MD5 groups: one for the identical file and one for the different file
+
+    // Cleanup: Remove the temporary directories and files
+    std::filesystem::remove_all(dir1);
+    std::filesystem::remove_all(dir2);
+}
+
+
