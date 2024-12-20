@@ -4,10 +4,9 @@
 #include <filesystem>
 #include <iostream>
 
-
 // Test for duplicate file detection
 TEST(DuplicateFinderTest, DetectDuplicateFilesTest) {
-	std::cout << "DuplicateFinderTest FOO\n";
+    std::cout << "DuplicateFinderTest FOO\n";
 
     // Setup: create two temporary files with identical content
     std::string temp_dir = "test_dir";
@@ -52,20 +51,19 @@ TEST(DuplicateFinderTest, DetectDuplicateFilesTest) {
                 std::cout << file.filename() << " ";
             }
             std::cout << std::endl;
-            break;
         }
     }
 
-    // Check the result
     EXPECT_TRUE(duplicates_found);  // Expect that duplicates are found
 
     // Cleanup: Remove the temporary files and directory
-    // TODO std::filesystem::remove_all(temp_dir);
+    std::filesystem::remove_all(temp_dir);
 }
 
 // Test for getAllFiles() function
 TEST(DuplicateFinderTest, GetAllFilesTest) {
-	std::cout << "DuplicateFinderTest GetAllFilesTest\n";
+    std::cout << "DuplicateFinderTest GetAllFilesTest\n";
+
     // Setup: create a temporary directory and some files
     std::string temp_dir = "test_dir";
     std::filesystem::create_directory(temp_dir);
@@ -90,75 +88,86 @@ TEST(DuplicateFinderTest, GetAllFilesTest) {
     // Cleanup: Remove the temporary files and directory
     std::filesystem::remove_all(temp_dir);
 }
-// Test for computeMD5() function
+
 // Test for computeMD5() function
 TEST(DuplicateFinderTest, ComputeMD5Test) {
     std::cout << "DuplicateFinderTest ComputeMD5Test\n";
 
     // Setup: create a temporary file with known content
     std::string temp_file = "test_file.txt";
-
-    // Open file in write mode, explicitly avoiding newlines
-    std::ofstream file(temp_file, std::ios::out | std::ios::trunc);  
-    file << "Test content";  // Write exactly "Test content" with no newline
-    file.close();
+    std::ofstream(temp_file) << "Test content";  // Ensure no extra characters here
 
     // Verify: Output file content to debug
-    std::ifstream file_in(temp_file);
-    std::string file_content((std::istreambuf_iterator<char>(file_in)), std::istreambuf_iterator<char>());
+    std::ifstream file(temp_file);
+    std::string file_content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::cout << "File content in ComputeMD5Test: \"" << file_content << "\"\n";  // Debugging output
 
     // Execute: Call computeMD5()
     std::string md5_hash = computeMD5(temp_file);
 
-    // Verify: Check if the MD5 hash is as expected (known hash for "Test content" without newline)
-    EXPECT_EQ(md5_hash, "8bfa8e0684108f419933a5995264d150"); // MD5 for "Test content" without newline
+    // Verify: Check if the MD5 hash is as expected (known hash for "Test content")
+    EXPECT_EQ(md5_hash, "8bfa8e0684108f419933a5995264d150"); // MD5 for "Test content"
 
     // Cleanup: Remove the temporary file
     std::filesystem::remove(temp_file);
 }
 
+// Test for empty directories
+TEST(DuplicateFinderTest, CompareEmptyDirectories) {
+    std::cout << "DuplicateFinderTest CompareEmptyDirectories\n";
 
-// Test for comparing two folders where one file is different
-TEST(DuplicateFinderTest, CompareTwoFoldersWithOneFileDifferent) {
-    std::cout << "DuplicateFinderTest CompareTwoFoldersWithOneFileDifferent\n";
-
-    // Setup: create two temporary directories
-    std::string dir1 = "dir1";
-    std::string dir2 = "dir2";
+    // Setup: create two empty temporary directories
+    std::string dir1 = "empty_dir1";
+    std::string dir2 = "empty_dir2";
     std::filesystem::create_directory(dir1);
     std::filesystem::create_directory(dir2);
-
-    // Create identical files in both directories
-    std::string file1_dir1 = dir1 + "/file.txt";
-    std::string file1_dir2 = dir2 + "/file.txt";
-    std::ofstream(file1_dir1) << "Identical content";  // Same content in both directories
-    std::ofstream(file1_dir2) << "Identical content";  // Same content in both directories
-
-    // Modify one file in dir2 to make it different
-    std::string file2_dir2 = dir2 + "/file2.txt";
-    std::ofstream(file2_dir2) << "Different content";  // Different content
 
     // Execute: Call the function to find all files in both directories
     std::vector<std::filesystem::path> files_dir1 = getAllFiles(dir1);
     std::vector<std::filesystem::path> files_dir2 = getAllFiles(dir2);
 
-    // Simulate the logic for detecting duplicates across two directories
+    // Simulate the logic for detecting duplicates across the directories
     std::unordered_map<std::string, std::vector<std::filesystem::path>> file_hashes;
 
-    // Hash files in dir1
     for (const auto& file : files_dir1) {
         std::string md5 = computeMD5(file);
         file_hashes[md5].push_back(file);
     }
 
-    // Hash files in dir2
     for (const auto& file : files_dir2) {
         std::string md5 = computeMD5(file);
         file_hashes[md5].push_back(file);
     }
 
-    // Verify: Check for duplicates across directories
+    // Verify: No duplicates should be found as both directories are empty
+    EXPECT_TRUE(file_hashes.empty());  // No files in the directories
+
+    // Cleanup: Remove the temporary directories
+    std::filesystem::remove_all(dir1);
+    std::filesystem::remove_all(dir2);
+}
+
+// Test for identical files with different names
+TEST(DuplicateFinderTest, IdenticalFilesDifferentNames) {
+    std::cout << "DuplicateFinderTest IdenticalFilesDifferentNames\n";
+
+    // Setup: create two files with identical content but different names
+    std::string dir = "dir_identical";
+    std::filesystem::create_directory(dir);
+    std::ofstream(dir + "/file1.txt") << "Identical content";
+    std::ofstream(dir + "/file2.txt") << "Identical content";  // Same content
+
+    // Execute: Call the function to find all files in the directory
+    std::vector<std::filesystem::path> files = getAllFiles(dir);
+
+    // Simulate the logic for detecting duplicates
+    std::unordered_map<std::string, std::vector<std::filesystem::path>> file_hashes;
+    for (const auto& file : files) {
+        std::string md5 = computeMD5(file);
+        file_hashes[md5].push_back(file);
+    }
+
+    // Verify: The files with identical content should be grouped as duplicates
     bool duplicates_found = false;
     for (const auto& entry : file_hashes) {
         if (entry.second.size() > 1) {
@@ -171,13 +180,69 @@ TEST(DuplicateFinderTest, CompareTwoFoldersWithOneFileDifferent) {
         }
     }
 
-    // Ensure that the files are not falsely identified as duplicates when one file is different
-    ASSERT_TRUE(duplicates_found);  // At least one duplicate file should be found
-    EXPECT_EQ(file_hashes.size(), 2);  // Two unique MD5 groups: one for the identical file and one for the different file
+    EXPECT_TRUE(duplicates_found);  // Duplicate files should be found
 
-    // Cleanup: Remove the temporary directories and files
-    std::filesystem::remove_all(dir1);
-    std::filesystem::remove_all(dir2);
+    // Cleanup: Remove the temporary files and directory
+    std::filesystem::remove_all(dir);
 }
 
+// Test for directory with subdirectory
+TEST(DuplicateFinderTest, DirectoryWithSubdirectory) {
+    std::cout << "DuplicateFinderTest DirectoryWithSubdirectory\n";
+
+    // Setup: create two directories, one containing a subdirectory
+    std::string dir = "dir_with_subdir";
+    std::filesystem::create_directory(dir);
+    std::filesystem::create_directory(dir + "/subdir");
+    std::ofstream(dir + "/file1.txt") << "File in main directory";
+    std::ofstream(dir + "/subdir/file2.txt") << "File in subdirectory";
+
+    // Execute: Call the function to find all files in the directory, including subdirectories
+    std::vector<std::filesystem::path> files = getAllFiles(dir);
+
+    // Verify: Check that both files exist
+    bool file1_found = false;
+    bool file2_found = false;
+    for (const auto& file : files) {
+        if (file.filename() == "file1.txt") {
+            file1_found = true;
+        }
+        if (file.filename() == "file2.txt") {
+            file2_found = true;
+        }
+    }
+
+    EXPECT_TRUE(file1_found);
+    EXPECT_TRUE(file2_found);
+
+    // Cleanup: Remove the temporary directories and files
+    std::filesystem::remove_all(dir);
+}
+
+// Test for identical files with different content
+TEST(DuplicateFinderTest, IdenticalFilesDifferentContent) {
+    std::cout << "DuplicateFinderTest IdenticalFilesDifferentContent\n";
+
+    // Setup: create two files with different content
+    std::string dir = "dir_diff_content";
+    std::filesystem::create_directory(dir);
+    std::ofstream(dir + "/file1.txt") << "Content of file 1";
+    std::ofstream(dir + "/file2.txt") << "Content of file 2";  // Different content
+
+    // Execute: Call the function to find all files in the directory
+    std::vector<std::filesystem::path> files = getAllFiles(dir);
+
+    // Simulate the logic for detecting duplicates
+    std::unordered_map<std::string, std::vector<std::filesystem::path>> file_hashes;
+    for (const auto& file : files) {
+        std::string md5 = computeMD5(file);
+        file_hashes[md5].push_back(file);
+    }
+
+    // Verify: There should be two unique MD5 hashes, as the files have different content
+    ASSERT_EQ(file_hashes.size(), 2);  // Two unique files with different content
+
+    // Cleanup: Remove the temporary files and directory
+    std::filesystem::remove_all(dir);
+}
 
