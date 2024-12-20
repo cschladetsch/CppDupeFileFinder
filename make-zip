@@ -1,1 +1,3 @@
-zip code.zip CMakeLists.txt src/* include/* tests/*
+#!/bin/bash
+
+zip code.zip b CMakeLists.txt src/* include/* tests/*
