@@ -5,6 +5,8 @@
 #include "DuplicateFinder.h"
 #include "ProgressBar.h"
 
+#include <gtest/gtest.h>
+
 int main(int argc, char **argv) {
     std::vector<std::string> directories = {"/mnt/c/", "/mnt/d/"};
 	if (argc == 3) {
