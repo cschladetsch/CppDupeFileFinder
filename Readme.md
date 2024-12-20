@@ -16,6 +16,7 @@ This project is a **Duplicate File Finder** that helps you identify and remove d
 
 ## Project Structure
 
+```
 ├── CMakeLists.txt       # CMake configuration for building the project
 ├── src/                 # Source code for the application
 │   ├── FileUtils.cpp    # Utility functions for file handling
@@ -28,6 +29,7 @@ This project is a **Duplicate File Finder** that helps you identify and remove d
 ├── tests/               # Unit tests for the application
 │   └── test\_DuplicateFinder.cpp  # Test file for DuplicateFinder functionality
 └── b/                   # Possibly a test or experimental directory (can be reviewed further)
+```
 
 ## Prerequisites
 
